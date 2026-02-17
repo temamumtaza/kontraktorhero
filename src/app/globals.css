@@ -15,15 +15,19 @@
   --color-success: var(--success);
   --color-surface: var(--surface);
   --color-surface-light: var(--surface-light);
+  --color-surface-dark: var(--surface-dark);
   --color-surface-card: var(--surface-card);
   --color-surface-hover: var(--surface-hover);
+  --color-surface-input: var(--surface-input);
   --color-text: var(--text);
   --color-text-muted: var(--text-muted);
   --color-border: var(--border);
 }
 
-/* Light Mode Defaults */
+/* Dark Mode Only — No light mode */
 :root {
+  color-scheme: dark;
+
   --primary: #1A365D;
   --primary-light: #2B4F8A;
   --primary-dark: #0F2440;
@@ -34,33 +38,16 @@
 
   --success: #38A169;
 
-  --surface: #FFFFFF;
-  --surface-light: #F8FAFC;
-  /* Slate-50 */
-  --surface-card: #FFFFFF;
-  --surface-hover: #F1F5F9;
-  /* Slate-100 */
+  --surface: #0B1120;
+  --surface-light: #131B2E;
+  --surface-dark: #070D1A;
+  --surface-card: #1A2332;
+  --surface-hover: #1E2D40;
+  --surface-input: #131B2E;
 
-  --text: #0F172A;
-  /* Slate-900 */
-  --text-muted: #64748B;
-  /* Slate-500 */
-  --border: #E2E8F0;
-  /* Slate-200 */
-}
-
-/* Dark Mode Overrides */
-@media (prefers-color-scheme: dark) {
-  :root {
-    --surface: #0B1120;
-    --surface-light: #131B2E;
-    --surface-card: #1A2332;
-    --surface-hover: #1E2D40;
-
-    --text: #E2E8F0;
-    --text-muted: #94A3B8;
-    --border: #2D3748;
-  }
+  --text: #E2E8F0;
+  --text-muted: #94A3B8;
+  --border: #2D3748;
 }
 
 @layer base {
@@ -140,37 +127,32 @@
   }
 }
 
-/* KaTeX Dark Mode Support & High Visibility */
-@media (prefers-color-scheme: dark) {
-  .katex {
-    color: #f8fafc !important;
-    /* Slate-50 for max contrast */
-    font-weight: 500;
-  }
-
-  .katex-display {
-    color: #f8fafc !important;
-  }
-
-  .katex .frac-line,
-  .katex .sqrt-line {
-    border-color: #f8fafc !important;
-  }
-
-  .katex .path {
-    stroke: #f8fafc !important;
-  }
+/* KaTeX High Visibility (always dark bg) */
+.katex {
+  color: #f8fafc !important;
+  font-weight: 500;
 }
 
-/* Mermaid Custom Styling for Better Visibility */
+.katex-display {
+  color: #f8fafc !important;
+}
+
+.katex .frac-line,
+.katex .sqrt-line {
+  border-color: #f8fafc !important;
+}
+
+.katex .path {
+  stroke: #f8fafc !important;
+}
+
+/* Mermaid Custom Styling */
 .mermaid text.nodeLabel,
 .mermaid .label {
   font-family: var(--font-sans) !important;
-  /* Removed font-weight override to prevent layout mismatch */
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
 }
 
-/* Ensure text inside foreignObject wraps correctly */
 .mermaid .node foreignObject p,
 .mermaid .node foreignObject div,
 .mermaid span {
@@ -179,15 +161,12 @@
   line-height: 1.4;
 }
 
-/* Force specific colors in dark mode if needed via CSS override */
-@media (prefers-color-scheme: dark) {
-  .mermaid .nodeLabel {
-    fill: #ffffff !important;
-  }
+.mermaid .nodeLabel {
+  fill: #ffffff !important;
+}
 
-  .mermaid .edgeLabel {
-    background-color: transparent !important;
-    color: #e2e8f0 !important;
-    font-weight: 600;
-  }
+.mermaid .edgeLabel {
+  background-color: transparent !important;
+  color: #e2e8f0 !important;
+  font-weight: 600;
 }

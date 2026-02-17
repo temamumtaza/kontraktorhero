@@ -1,41 +1,20 @@
 "use client";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef } from "react";
 import mermaid from "mermaid";
 
 export default function Mermaid({ chart }: { chart: string }) {
     const ref = useRef<HTMLDivElement>(null);
-    const [isDark, setIsDark] = useState(false);
 
     useEffect(() => {
-        // Check system preference
-        const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
-        setIsDark(mediaQuery.matches);
-
-        const handler = (e: MediaQueryListEvent) => setIsDark(e.matches);
-        mediaQuery.addEventListener("change", handler);
-        return () => mediaQuery.removeEventListener("change", handler);
-    }, []);
-
-    useEffect(() => {
-        const themeVariables = isDark
-            ? {
-                // Dark Mode Variables - Ultra High Contrast
-                primaryColor: "#1e293b", // slate-800
-                primaryTextColor: "#ffffff", // Pure white
-                primaryBorderColor: "#38bdf8", // sky-400
-                lineColor: "#cbd5e1", // slate-300 (brighter lines)
-                secondaryColor: "#0f172a", // slate-900
-                tertiaryColor: "#334155", // slate-700
-            }
-            : {
-                // Light Mode Variables
-                primaryColor: "#ffffff", // white
-                primaryTextColor: "#0f172a", // slate-900
-                primaryBorderColor: "#0ea5e9", // sky-500
-                lineColor: "#475569", // slate-600
-                secondaryColor: "#f8fafc", // slate-50
-                tertiaryColor: "#e2e8f0", // slate-200
-            };
+        // Always dark theme
+        const themeVariables = {
+            primaryColor: "#1e293b",
+            primaryTextColor: "#ffffff",
+            primaryBorderColor: "#38bdf8",
+            lineColor: "#cbd5e1",
+            secondaryColor: "#0f172a",
+            tertiaryColor: "#334155",
+        };
 
         mermaid.initialize({
             startOnLoad: false,
@@ -43,17 +22,17 @@ export default function Mermaid({ chart }: { chart: string }) {
             themeVariables: {
                 ...themeVariables,
                 fontFamily: "var(--font-sans)",
-                fontSize: "14px", // Slightly smaller to prevent overflow
+                fontSize: "14px",
             },
             flowchart: {
                 htmlLabels: true,
-                useMaxWidth: false, // Prevent aggressive scaling shrinking the chart
+                useMaxWidth: false,
                 padding: 20,
             },
             securityLevel: "loose",
             fontFamily: "var(--font-sans)",
         });
-    }, [isDark]);
+    }, []);
 
     useEffect(() => {
         const renderChart = async () => {
@@ -75,7 +54,7 @@ export default function Mermaid({ chart }: { chart: string }) {
             renderChart();
         }, 100);
 
-    }, [chart, isDark]);
+    }, [chart]);
 
     return (
         <div className="w-full overflow-x-auto my-6 text-center">
