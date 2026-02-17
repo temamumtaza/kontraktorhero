@@ -121,7 +121,17 @@ function CheckoutContent() {
 
         } catch (err: any) {
             console.error(err);
-            setError(err.message || "Terjadi kesalahan.");
+            // User-friendly error messages
+            const msg = err.message || "";
+            if (msg.includes("rate limit")) {
+                setError("Terlalu banyak percobaan. Silakan tunggu beberapa menit lalu coba lagi.");
+            } else if (msg.includes("already registered") || msg.includes("already been registered")) {
+                setError("Email sudah terdaftar. Silakan login di halaman Akses Member.");
+            } else if (msg.includes("weak password") || msg.includes("password")) {
+                setError("Password terlalu lemah. Gunakan minimal 6 karakter dengan kombinasi huruf dan angka.");
+            } else {
+                setError(msg || "Terjadi kesalahan. Silakan coba lagi.");
+            }
         } finally {
             setIsLoading(false);
         }
