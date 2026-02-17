@@ -1,0 +1,193 @@
+@import "tailwindcss";
+@source "../../src";
+@plugin "@tailwindcss/typography";
+
+@theme {
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+
+  --color-primary: var(--primary);
+  --color-primary-light: var(--primary-light);
+  --color-primary-dark: var(--primary-dark);
+  --color-accent: var(--accent);
+  --color-accent-light: var(--accent-light);
+  --color-accent-dark: var(--accent-dark);
+  --color-success: var(--success);
+  --color-surface: var(--surface);
+  --color-surface-light: var(--surface-light);
+  --color-surface-card: var(--surface-card);
+  --color-surface-hover: var(--surface-hover);
+  --color-text: var(--text);
+  --color-text-muted: var(--text-muted);
+  --color-border: var(--border);
+}
+
+/* Light Mode Defaults */
+:root {
+  --primary: #1A365D;
+  --primary-light: #2B4F8A;
+  --primary-dark: #0F2440;
+
+  --accent: #DD6B20;
+  --accent-light: #ED8936;
+  --accent-dark: #C05621;
+
+  --success: #38A169;
+
+  --surface: #FFFFFF;
+  --surface-light: #F8FAFC;
+  /* Slate-50 */
+  --surface-card: #FFFFFF;
+  --surface-hover: #F1F5F9;
+  /* Slate-100 */
+
+  --text: #0F172A;
+  /* Slate-900 */
+  --text-muted: #64748B;
+  /* Slate-500 */
+  --border: #E2E8F0;
+  /* Slate-200 */
+}
+
+/* Dark Mode Overrides */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --surface: #0B1120;
+    --surface-light: #131B2E;
+    --surface-card: #1A2332;
+    --surface-hover: #1E2D40;
+
+    --text: #E2E8F0;
+    --text-muted: #94A3B8;
+    --border: #2D3748;
+  }
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background-color: var(--color-surface);
+    color: var(--color-text);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  ::selection {
+    background-color: var(--color-accent);
+    color: white;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply inline-flex items-center justify-center px-8 py-4 bg-accent text-white font-bold rounded-xl hover:bg-accent-light transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-accent/20;
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center justify-center px-8 py-4 border-2 border-accent text-accent font-bold rounded-xl hover:bg-accent hover:text-white transition-all duration-300;
+  }
+
+  .card {
+    @apply bg-surface-card border border-border rounded-2xl p-6 hover:border-accent/30 transition-all duration-300 shadow-sm md:shadow-none;
+  }
+
+  .section-title {
+    @apply text-3xl md:text-4xl font-bold text-text;
+  }
+
+  .section-subtitle {
+    @apply text-lg text-text-muted mt-4 max-w-2xl;
+  }
+
+  .gradient-text {
+    @apply bg-gradient-to-r from-accent to-accent-light bg-clip-text text-transparent;
+  }
+
+  .glow-accent {
+    box-shadow: 0 0 60px rgba(221, 107, 32, 0.15);
+  }
+
+  /* Remove default quotes from prose blockquotes */
+  .prose blockquote p::before,
+  .prose blockquote p::after {
+    content: none !important;
+  }
+}
+
+@layer utilities {
+  .animate-float {
+    animation: float 6s ease-in-out infinite;
+  }
+
+  .animate-pulse-slow {
+    animation: pulse 3s ease-in-out infinite;
+  }
+}
+
+@keyframes float {
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+/* KaTeX Dark Mode Support & High Visibility */
+@media (prefers-color-scheme: dark) {
+  .katex {
+    color: #f8fafc !important;
+    /* Slate-50 for max contrast */
+    font-weight: 500;
+  }
+
+  .katex-display {
+    color: #f8fafc !important;
+  }
+
+  .katex .frac-line,
+  .katex .sqrt-line {
+    border-color: #f8fafc !important;
+  }
+
+  .katex .path {
+    stroke: #f8fafc !important;
+  }
+}
+
+/* Mermaid Custom Styling for Better Visibility */
+.mermaid text.nodeLabel,
+.mermaid .label {
+  font-family: var(--font-sans) !important;
+  /* Removed font-weight override to prevent layout mismatch */
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+/* Ensure text inside foreignObject wraps correctly */
+.mermaid .node foreignObject p,
+.mermaid .node foreignObject div,
+.mermaid span {
+  white-space: normal !important;
+  text-align: center;
+  line-height: 1.4;
+}
+
+/* Force specific colors in dark mode if needed via CSS override */
+@media (prefers-color-scheme: dark) {
+  .mermaid .nodeLabel {
+    fill: #ffffff !important;
+  }
+
+  .mermaid .edgeLabel {
+    background-color: transparent !important;
+    color: #e2e8f0 !important;
+    font-weight: 600;
+  }
+}
