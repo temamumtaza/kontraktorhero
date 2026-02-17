@@ -6,6 +6,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { supabase } from "@/lib/supabase";
+import { PRICING } from "@/lib/pricing";
 import { Loader2, Shield, CheckCircle2 } from "lucide-react";
 
 // Schema Validation
@@ -34,9 +35,10 @@ function CheckoutContent() {
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
-    // Pricing Logic
-    const price = tier === "hero" ? 229000 : 149000;
-    const originalPrice = tier === "hero" ? 2290000 : 999000;
+    // Pricing from centralized config (matches landing page)
+    const plan = PRICING[tier];
+    const price = plan.price;
+    const originalPrice = plan.originalPrice;
 
     const {
         register,
@@ -141,7 +143,7 @@ function CheckoutContent() {
                         <div>
                             <h3 className="text-sm text-text-muted uppercase tracking-wider mb-2">Paket Pilihan</h3>
                             <div className="text-2xl font-bold text-white mb-1">
-                                {tier === "hero" ? "Hero Membership" : "Starter Pack"}
+                                {plan.name}
                             </div>
                             <div className="text-text-muted text-sm">Akses selamanya + Update gratis</div>
                         </div>
@@ -158,20 +160,12 @@ function CheckoutContent() {
                         </div>
 
                         <div className="space-y-3">
-                            <div className="flex items-center gap-2 text-sm text-text-muted">
-                                <CheckCircle2 className="w-4 h-4 text-accent" />
-                                <span>Akses 6 Modul Lengkap</span>
-                            </div>
-                            <div className="flex items-center gap-2 text-sm text-text-muted">
-                                <CheckCircle2 className="w-4 h-4 text-accent" />
-                                <span>80+ Template Dokumen</span>
-                            </div>
-                            {tier === 'hero' && (
-                                <div className="flex items-center gap-2 text-sm text-text-muted">
+                            {plan.features.map((feature, i) => (
+                                <div key={i} className="flex items-center gap-2 text-sm text-text-muted">
                                     <CheckCircle2 className="w-4 h-4 text-accent" />
-                                    <span>Prioritas Support</span>
+                                    <span>{feature}</span>
                                 </div>
-                            )}
+                            ))}
                         </div>
                     </div>
                 </div>
