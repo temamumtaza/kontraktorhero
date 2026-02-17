@@ -252,13 +252,13 @@ export default function Home() {
             <a href="#faq" className="hover:text-white transition-colors">
               FAQ
             </a>
-            <Link href="/course" className="btn-primary !py-2 !px-5 text-sm">
+            <Link href="/login" className="btn-primary !py-2 !px-5 text-sm">
               <Lock className="w-3.5 h-3.5 mr-1.5" />
               Akses Member
             </Link>
           </div>
           <Link
-            href="/course"
+            href="/login"
             className="md:hidden btn-primary !py-2 !px-4 text-sm"
           >
             Akses Member
@@ -301,12 +301,18 @@ export default function Home() {
             </p>
           </div>
           <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
-            <a href="#harga" className="btn-primary text-lg group">
-              <Sword className="w-5 h-5 mr-2" />
-              Dapatkan Akses Sekarang — Rp 149.000
-              <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
+            <a
+              href="/checkout?tier=hero"
+              className="w-full md:w-auto h-14 px-8 flex items-center justify-center gap-2 bg-gradient-to-r from-accent to-accent-light hover:from-accent-light hover:to-accent text-white font-bold text-lg rounded-xl shadow-xl shadow-accent/20 transition-all transform hover:scale-[1.02] active:scale-[0.98]"
+            >
+              <Sword className="w-6 h-6" />
+              Ambil Senjata Anda — Rp 149.000
             </a>
-            <a href="#kurikulum" className="btn-secondary text-lg">
+            <a
+              href="#curriculum"
+              className="w-full md:w-auto h-14 px-8 flex items-center justify-center gap-2 bg-surface-card hover:bg-surface-hover text-white font-semibold text-lg rounded-xl border border-white/10 transition-all"
+            >
+              <ArrowRight className="w-5 h-5" />
               Lihat Isi Materi
             </a>
           </div>
@@ -578,7 +584,7 @@ export default function Home() {
                 </div>
               </div>
               <a
-                href="#"
+                href="/checkout?tier=starter"
                 className="btn-secondary w-full mt-8 text-center block"
               >
                 Pilih Starter
@@ -639,7 +645,7 @@ export default function Home() {
                   <span className="text-text-muted">Garansi 7 hari uang kembali</span>
                 </div>
               </div>
-              <a href="#" className="btn-primary w-full mt-8 text-center block group">
+              <a href="/checkout?tier=hero" className="btn-primary w-full mt-8 text-center block group">
                 <Sword className="w-4 h-4 mr-2 inline" />
                 Ambil Promo Ini — Rp 149.000
                 <ArrowRight className="w-4 h-4 ml-2 inline group-hover:translate-x-1 transition-transform" />
@@ -728,7 +734,7 @@ export default function Home() {
           <p className="text-text-muted mt-4 text-lg">
             Setiap proyek besar dimulai dari satu langkah. Mulai transformasi bisnis Anda sekarang.
           </p>
-          <a href="#harga" className="btn-primary text-lg mt-8 inline-flex items-center group">
+          <a href="/checkout?tier=hero" className="btn-primary text-lg mt-8 inline-flex items-center group">
             <Sword className="w-5 h-5 mr-2" />
             Ambil Promo Ini
             <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
