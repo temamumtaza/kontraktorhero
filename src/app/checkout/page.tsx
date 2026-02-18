@@ -1,11 +1,12 @@
 "use client";
 
-import { useState, Suspense } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { supabase } from "@/lib/supabase";
+import { useAction } from "convex/react";
+import { api } from "@convex/_generated/api";
 import { PRICING } from "@/lib/pricing";
 import { Loader2, Shield, CheckCircle2 } from "lucide-react";
 
@@ -34,11 +35,15 @@ function CheckoutContent() {
 
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [paymentStatus, setPaymentStatus] = useState<"idle" | "success" | "pending">("idle");
 
-    // Pricing from centralized config (matches landing page)
+    // Pricing from centralized config (for display only — actual price is server-side)
     const plan = PRICING[tier];
     const price = plan.price;
     const originalPrice = plan.originalPrice;
+
+    // Public action — no auth required
+    const initiateCheckout = useAction(api.checkoutActions.initiateCheckout);
 
     const {
         register,
@@ -46,93 +51,130 @@ function CheckoutContent() {
         formState: { errors },
     } = useForm<FormData>({
         resolver: zodResolver(formSchema),
-        defaultValues: {
-            phone: "8", // Helper for +62
-        },
+        defaultValues: {},
     });
 
+    // If payment already completed (from Midtrans redirect callback)
+    const urlStatus = searchParams.get("status");
+    useEffect(() => {
+        if (urlStatus === "paid" && paymentStatus === "idle") {
+            setPaymentStatus("success");
+        }
+    }, [urlStatus, paymentStatus]);
+
+    // Show success screen
+    if (paymentStatus === "success") {
+        return (
+            <div className="min-h-screen bg-surface-dark flex items-center justify-center">
+                <div className="max-w-md w-full mx-auto p-8 text-center">
+                    <div className="w-20 h-20 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
+                        <CheckCircle2 className="w-10 h-10 text-green-400" />
+                    </div>
+                    <h1 className="text-3xl font-bold text-white mb-3">Pembayaran Berhasil! 🎉</h1>
+                    <p className="text-text-muted mb-6">
+                        Akun Anda sedang diaktifkan. Silakan login dengan email dan password yang Anda daftarkan tadi.
+                    </p>
+                    <button
+                        onClick={() => router.push("/login")}
+                        className="w-full bg-accent hover:bg-accent-light text-white font-bold py-4 rounded-xl transition-all hover:scale-[1.02] active:scale-[0.98]"
+                    >
+                        Login ke Akun Saya
+                    </button>
+                    <p className="text-xs text-text-muted mt-4">
+                        Proses aktivasi biasanya instan. Jika belum bisa login, tunggu 1-2 menit.
+                    </p>
+                </div>
+            </div>
+        );
+    }
+
+    // Show pending screen
+    if (paymentStatus === "pending") {
+        return (
+            <div className="min-h-screen bg-surface-dark flex items-center justify-center">
+                <div className="max-w-md w-full mx-auto p-8 text-center">
+                    <div className="w-20 h-20 bg-yellow-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
+                        <Loader2 className="w-10 h-10 text-yellow-400 animate-spin" />
+                    </div>
+                    <h1 className="text-3xl font-bold text-white mb-3">Menunggu Pembayaran</h1>
+                    <p className="text-text-muted mb-6">
+                        Pembayaran Anda sedang diproses. Akun akan otomatis aktif setelah konfirmasi.
+                    </p>
+                    <button
+                        onClick={() => router.push("/")}
+                        className="w-full bg-surface-hover hover:bg-surface-card text-white font-bold py-4 rounded-xl transition-all border border-border"
+                    >
+                        Kembali ke Beranda
+                    </button>
+                </div>
+            </div>
+        );
+    }
+
+    /**
+     * Secure payment-first flow:
+     * 1. Form data sent to server → server determines price, hashes password
+     * 2. Server creates Midtrans transaction → returns snap token
+     * 3. Client opens Midtrans popup
+     * 4. On payment success → success popup shown
+     * 5. Midtrans webhook → server creates user account
+     * 6. User clicks "Login" → enters course
+     *
+     * NO ACCOUNT IS CREATED until payment is confirmed by webhook.
+     */
     const onSubmit = async (data: FormData) => {
         setIsLoading(true);
         setError(null);
 
         try {
-            // 1. Register User to Supabase
-            const { data: authData, error: authError } = await supabase.auth.signUp({
+            // Send form data to server (password is hashed server-side)
+            const result = await initiateCheckout({
                 email: data.email,
                 password: data.password,
-                options: {
-                    data: {
-                        username: data.username,
-                        first_name: data.firstName,
-                        last_name: data.lastName,
-                        phone: data.phone,
-                        tier: tier,
-                    },
-                },
+                firstName: data.firstName,
+                lastName: data.lastName,
+                phone: data.phone,
+                username: data.username,
+                tier,
             });
 
-            if (authError) throw authError;
-
-            if (!authData.user) throw new Error("Gagal membuat user.");
-
-            // 2. Call Transaction API to get Snap Token
-            const response = await fetch("/api/transaction", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    userId: authData.user.id,
-                    email: data.email,
-                    firstName: data.firstName,
-                    lastName: data.lastName,
-                    phone: data.phone,
-                    tier: tier,
-                    amount: price,
-                }),
-            });
-
-            const result = await response.json();
-            if (!response.ok) throw new Error(result.error || "Gagal memproses transaksi");
-
-            // 3. Open Midtrans Snap
-            // (Assuming window.snap is loaded via script in layout or loaded dynamically)
-            // For now, simpler implementation: Redirect to a payment page or open popup
-            // Because we need the Snap script, we'll load it dynamically or assume layout has it.
-            // Let's assume we handle the token.
-
+            // Open Midtrans Snap popup
             if (typeof window !== "undefined" && (window as any).snap) {
                 (window as any).snap.pay(result.token, {
-                    onSuccess: function (result: any) {
-                        router.push("/course?status=success");
+                    onSuccess: function () {
+                        setPaymentStatus("success");
+                        setIsLoading(false);
                     },
-                    onPending: function (result: any) {
-                        router.push("/dashboard?status=pending");
+                    onPending: function () {
+                        setPaymentStatus("pending");
+                        setIsLoading(false);
                     },
-                    onError: function (result: any) {
-                        setError("Pembayaran gagal.");
+                    onError: function () {
+                        setError("Pembayaran gagal. Silakan coba lagi.");
+                        setIsLoading(false);
                     },
                     onClose: function () {
                         console.log("Customer closed the popup without finishing the payment");
+                        setIsLoading(false);
                     },
                 });
+            } else if (result.redirect_url) {
+                // Fallback: redirect to Midtrans payment page
+                window.location.href = result.redirect_url;
             } else {
-                // Fallback or Error if script not loaded
-                alert("Sistem pembayaran belum siap (Script Snap tidak termuat).");
+                setError("Sistem pembayaran belum siap. Silakan refresh dan coba lagi.");
+                setIsLoading(false);
             }
-
         } catch (err: any) {
             console.error(err);
-            // User-friendly error messages
             const msg = err.message || "";
             if (msg.includes("rate limit")) {
                 setError("Terlalu banyak percobaan. Silakan tunggu beberapa menit lalu coba lagi.");
-            } else if (msg.includes("already registered") || msg.includes("already been registered")) {
+            } else if (msg.includes("already") || msg.includes("existing")) {
                 setError("Email sudah terdaftar. Silakan login di halaman Akses Member.");
-            } else if (msg.includes("weak password") || msg.includes("password")) {
-                setError("Password terlalu lemah. Gunakan minimal 6 karakter dengan kombinasi huruf dan angka.");
             } else {
                 setError(msg || "Terjadi kesalahan. Silakan coba lagi.");
             }
-        } finally {
             setIsLoading(false);
         }
     };
@@ -181,15 +223,15 @@ function CheckoutContent() {
                 </div>
 
                 <div className="mt-8 text-xs text-text-muted">
-                    Pembayaran aman & terenkripsi via Midtrans.
+                    Pembayaran aman &amp; terenkripsi via Midtrans.
                 </div>
             </div>
 
             {/* Right: Form */}
             <div className="w-full md:w-2/3 p-8 md:p-12 overflow-y-auto">
                 <div className="max-w-xl mx-auto">
-                    <h1 className="text-3xl font-bold text-white mb-2">Buat Akun Baru</h1>
-                    <p className="text-text-muted mb-8">Lengkapi data diri untuk akses materi segera.</p>
+                    <h1 className="text-3xl font-bold text-white mb-2">Daftar &amp; Bayar</h1>
+                    <p className="text-text-muted mb-8">Lengkapi data diri, lalu bayar — akun otomatis aktif setelah pembayaran berhasil.</p>
 
                     {error && (
                         <div className="bg-red-500/10 border border-red-500/50 text-red-400 p-4 rounded-lg mb-6 text-sm">
@@ -289,14 +331,14 @@ function CheckoutContent() {
                             {isLoading ? (
                                 <>
                                     <Loader2 className="w-5 h-5 animate-spin" />
-                                    Memproses...
+                                    Memproses pembayaran...
                                 </>
                             ) : (
-                                "Bayar & Aktivasi Akun"
+                                `Bayar Rp ${price.toLocaleString('id-ID')}`
                             )}
                         </button>
                         <p className="text-center text-xs text-text-muted mt-4">
-                            Dengan mendaftar, Anda menyetujui Syarat & Ketentuan Kontraktor Hero.
+                            Dengan mendaftar, Anda menyetujui Syarat &amp; Ketentuan Kontraktor Hero.
                         </p>
                     </form>
                 </div>

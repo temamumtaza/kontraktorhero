@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Script from "next/script";
+import { ConvexClientProvider } from "./ConvexClientProvider";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -52,7 +53,9 @@ export default function RootLayout({
         />
       </head>
       <body className="antialiased">
-        {children}
+        <ConvexClientProvider>
+          {children}
+        </ConvexClientProvider>
         <Script
           src={snapUrl}
           data-client-key={clientKey}
