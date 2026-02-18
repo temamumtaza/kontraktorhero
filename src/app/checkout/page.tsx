@@ -252,20 +252,20 @@ function CheckoutContent() {
                                             // Reset promo validation when switching product
                                             if (appliedPromo) handleRemovePromo();
                                         }}
-                                        className={`w-full text-left p-4 rounded-xl border transition-all ${selectedProduct._id === p._id
+                                        className={`w-full text-left p-4 rounded-xl border transition-all relative overflow-hidden ${selectedProduct._id === p._id
                                             ? "border-accent bg-accent/10 ring-1 ring-accent/30"
                                             : "border-border bg-surface-hover/30 hover:border-border/80"
                                             }`}
                                     >
+                                        {p.badge && (
+                                            <span className="absolute top-0 right-0 bg-accent text-white text-[10px] font-bold px-2 py-1 rounded-bl-lg">
+                                                {p.badge}
+                                            </span>
+                                        )}
                                         <div className="flex items-center justify-between">
                                             <div>
-                                                <div className="flex items-center gap-2">
-                                                    <span className="font-semibold text-white text-sm">{p.name}</span>
-                                                    {p.badge && (
-                                                        <span className="text-[10px] bg-accent text-white px-1.5 py-0.5 rounded font-bold">
-                                                            {p.badge}
-                                                        </span>
-                                                    )}
+                                                <div className="flex items-center gap-2 mb-1">
+                                                    <span className="font-semibold text-white text-sm pr-12">{p.name}</span>
                                                 </div>
                                                 <span className="text-xs text-text-muted line-through">
                                                     Rp {p.originalPrice.toLocaleString("id-ID")}
