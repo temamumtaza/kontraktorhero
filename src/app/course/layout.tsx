@@ -113,7 +113,7 @@ export default function CourseLayout({
                             {collapsed ? <BookOpen className="w-4 h-4 mx-auto" /> : "Kurikulum"}
                         </div>
 
-                        {chapterNav.map((ch) => {
+                        {chapters.map((ch) => {
                             const isActive = currentSlug === ch.slug;
                             return (
                                 <Link
@@ -126,7 +126,7 @@ export default function CourseLayout({
                                         ${collapsed ? "justify-center" : ""}
                                     `}
                                 >
-                                    <ch.Icon className={`w-5 h-5 shrink-0 transition-colors ${isActive ? "text-accent" : "text-accent/60 group-hover:text-accent"}`} />
+                                    <span className="text-xl shrink-0">{ch.icon}</span>
 
                                     {!collapsed && (
                                         <div className="flex-1 min-w-0 overflow-hidden">
