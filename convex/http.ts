@@ -55,6 +55,19 @@ http.route({
                 transaction_status === "settlement";
 
             if (isSuccess) {
+                // Check if it's an Upgrade (UPG- prefix) or New Registration (KH- prefix)
+                if (order_id.startsWith("UPG-")) {
+                    await ctx.runMutation(internal.invoices.markInvoicePaid, {
+                        invoiceId: order_id,
+                    });
+                    console.log(`Upgrade SUCCESS for invoice ${order_id}`);
+                    return new Response(
+                        JSON.stringify({ success: true, type: "upgrade" }),
+                        { status: 200, headers: { "Content-Type": "application/json" } }
+                    );
+                }
+
+                // New Registration
                 const userId = await ctx.runMutation(
                     internal.checkout.createPaidUser,
                     { orderId: order_id }
@@ -64,7 +77,7 @@ http.route({
                     `Payment SUCCESS for order ${order_id} → user ${userId}`
                 );
                 return new Response(
-                    JSON.stringify({ success: true }),
+                    JSON.stringify({ success: true, type: "registration" }),
                     { status: 200, headers: { "Content-Type": "application/json" } }
                 );
             }

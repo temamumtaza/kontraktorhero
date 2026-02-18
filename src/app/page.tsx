@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useQuery } from "convex/react";
+import { api } from "@convex/_generated/api";
 import Link from "next/link";
 import Image from "next/image";
 import {
@@ -84,12 +86,12 @@ const modules = [
 ];
 
 const bonuses = [
-  { name: "Template RAB Rumah 1 & 2 Lantai", value: "Rp 497.000", icon: FileSpreadsheet, count: "4 file" },
+  { name: "Template RAB", value: "Rp 497.000", icon: FileSpreadsheet, count: "4 file" },
   { name: "Template Cash Flow & Keuangan", value: "Rp 397.000", icon: Receipt, count: "6 file" },
   { name: "21 Template Invoice Profesional", value: "Rp 297.000", icon: FileText, count: "21 file" },
-  { name: "Template SDM, Absensi & Timesheet", value: "Rp 497.000", icon: Users, count: "25 file" },
+  { name: "Template Pengelolaan SDM, Absensi & Timesheet", value: "Rp 497.000", icon: Users, count: "25 file" },
   { name: "27 SOP Konstruksi Lengkap", value: "Rp 1.350.000", icon: ClipboardCheck, count: "27 file" },
-  { name: "Referensi AHSP 2025 (Kemen PUPR)", value: "Rp 247.000", icon: Scale, count: "10 file" },
+  { name: "Referensi AHSP 2025 - 2026 (Kemen PUPR)", value: "Rp 247.000", icon: Scale, count: "10 file" },
   { name: "Dokumen Proyek (Checklist & Serah Terima)", value: "Rp 197.000", icon: Building2, count: "4 file" },
 ];
 
@@ -197,6 +199,9 @@ function FAQItem({ q, a }: { q: string; a: string }) {
 
 export default function Home() {
   const [slotsLeft] = useState(47);
+  const allProducts = useQuery(api.products.getActiveProducts) || [];
+  const starterProduct = allProducts.find((p: any) => p.slug === "starter");
+  const heroProduct = allProducts.find((p: any) => p.slug === "hero");
 
   const courseTotal = modules.reduce((acc, m) => {
     const num = parseInt(m.price.replace(/\D/g, ""));
@@ -647,7 +652,7 @@ export default function Home() {
               </div>
               <a href="/checkout?tier=hero" className="btn-primary w-full mt-8 text-center block group">
                 <Sword className="w-4 h-4 mr-2 inline" />
-                Ambil Promo Ini — Rp 149.000
+                Ambil Promo Ini — Rp {heroProduct ? heroProduct.price.toLocaleString("id-ID") : "149.000"}
                 <ArrowRight className="w-4 h-4 ml-2 inline group-hover:translate-x-1 transition-transform" />
               </a>
               <div className="mt-3 flex items-center justify-center gap-2 text-xs text-red-400">

@@ -34,6 +34,8 @@ export const savePendingRegistration = internalMutation({
         tier: v.string(),
         orderId: v.string(),
         amount: v.number(),
+        promoCode: v.optional(v.string()),
+        discountAmount: v.optional(v.number()),
     },
     handler: async (ctx, args) => {
         return await ctx.db.insert("pendingRegistrations", {
@@ -110,6 +112,17 @@ export const createPaidUser = internalMutation({
         });
 
         await ctx.db.patch(pending._id, { status: "paid" });
+
+        // Increment promo code usage if applicable
+        if (pending.promoCode) {
+            const promo = await ctx.db
+                .query("promoCodes")
+                .withIndex("code", (q) => q.eq("code", pending.promoCode!))
+                .first();
+            if (promo) {
+                await ctx.db.patch(promo._id, { usedCount: promo.usedCount + 1 });
+            }
+        }
 
         console.log(`Created paid user ${userId} for order ${args.orderId}`);
         return userId;

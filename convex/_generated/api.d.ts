@@ -8,10 +8,17 @@
  * @module
  */
 
+import type * as admin from "../admin.js";
+import type * as adminActions from "../adminActions.js";
 import type * as checkout from "../checkout.js";
 import type * as checkoutActions from "../checkoutActions.js";
 import type * as http from "../http.js";
+import type * as invoices from "../invoices.js";
 import type * as loginAction from "../loginAction.js";
+import type * as products from "../products.js";
+import type * as promos from "../promos.js";
+import type * as seed from "../seed.js";
+import type * as upgrade from "../upgrade.js";
 import type * as users from "../users.js";
 
 import type {
@@ -21,10 +28,17 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  admin: typeof admin;
+  adminActions: typeof adminActions;
   checkout: typeof checkout;
   checkoutActions: typeof checkoutActions;
   http: typeof http;
+  invoices: typeof invoices;
   loginAction: typeof loginAction;
+  products: typeof products;
+  promos: typeof promos;
+  seed: typeof seed;
+  upgrade: typeof upgrade;
   users: typeof users;
 }>;
 

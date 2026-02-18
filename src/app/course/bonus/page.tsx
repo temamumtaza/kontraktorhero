@@ -1,6 +1,10 @@
 "use client";
 
 import { useState } from "react";
+import { useQuery } from "convex/react";
+import { api } from "@convex/_generated/api";
+import { getSessionToken } from "@/app/login/page";
+import Link from "next/link";
 import {
     FileSpreadsheet,
     FileText,
@@ -17,6 +21,8 @@ import {
     ClipboardList,
     Building2,
     Scale,
+    Lock,
+    Crown,
 } from "lucide-react";
 import { getAssetPath } from "@/lib/config";
 
@@ -235,7 +241,28 @@ function getFileType(path: string) {
     return "File";
 }
 
-function FileRow({ file }: { file: BonusFile }) {
+function FileRow({ file, isLocked }: { file: BonusFile; isLocked: boolean }) {
+    if (isLocked) {
+        return (
+            <div className="flex items-center gap-4 p-4 rounded-xl bg-surface/30 border border-transparent opacity-70 cursor-not-allowed relative overflow-hidden group">
+                {/* Diagonal stripes overlay for blocked feel */}
+                <div className="absolute inset-0 bg-[url('/stripes.png')] opacity-5 pointer-events-none" />
+
+                <div className="shrink-0 opacity-50">{getFileIcon(file.path)}</div>
+                <div className="flex-1 min-w-0">
+                    <p className="text-text-muted text-sm font-medium truncate">{file.name}</p>
+                    <p className="text-text-muted/60 text-xs mt-0.5">
+                        {getFileType(file.path)} · {file.size}
+                    </p>
+                </div>
+                <div className="shrink-0 flex items-center gap-2 px-4 py-2 rounded-lg bg-surface-card border border-border text-text-muted text-xs font-medium">
+                    <Lock className="w-3.5 h-3.5" />
+                    <span className="hidden sm:inline">Locked</span>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div className="flex items-center gap-4 p-4 rounded-xl bg-surface/50 hover:bg-surface-hover border border-transparent hover:border-accent/20 transition-all duration-200 group">
             <div className="shrink-0">{getFileIcon(file.path)}</div>
@@ -262,6 +289,10 @@ export default function BonusPage() {
     const [activeFolder, setActiveFolder] = useState<string | null>(null);
     const [searchQuery, setSearchQuery] = useState("");
     const [expandedSubfolders, setExpandedSubfolders] = useState<Set<string>>(new Set());
+
+    const sessionToken = getSessionToken();
+    const user = useQuery(api.users.getMe, { sessionToken });
+    const isLocked = user?.tier !== "hero";
 
     const toggleSubfolder = (key: string) => {
         setExpandedSubfolders((prev) => {
@@ -302,19 +333,47 @@ export default function BonusPage() {
         <div className="max-w-4xl mx-auto px-6 py-10">
             {/* Page Header */}
             <div className="mb-8">
-                <div className="flex items-center gap-3 mb-3">
-                    <div className="w-12 h-12 bg-accent/10 rounded-xl flex items-center justify-center">
-                        <Gift className="w-6 h-6 text-accent" />
+                <div className="flex items-center justify-between gap-4">
+                    <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 bg-accent/10 rounded-xl flex items-center justify-center">
+                            <Gift className="w-6 h-6 text-accent" />
+                        </div>
+                        <div>
+                            <h1 className="text-2xl md:text-3xl font-black text-text">
+                                Bonus <span className="gradient-text">Kontraktor Hero</span>
+                            </h1>
+                            <p className="text-text-muted text-sm mt-0.5">
+                                {totalFiles} senjata rahasia (template & dokumen) siap pakai
+                            </p>
+                        </div>
                     </div>
-                    <div>
-                        <h1 className="text-2xl md:text-3xl font-black text-text">
-                            Bonus <span className="gradient-text">Kontraktor Hero</span>
-                        </h1>
-                        <p className="text-text-muted text-sm mt-0.5">
-                            {totalFiles} senjata rahasia (template & dokumen) siap pakai
-                        </p>
-                    </div>
+
+                    {/* Locked Badge for Non-Hero */}
+                    {isLocked && user && (
+                        <div className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-surface-card border border-border text-xs font-mono text-text-muted">
+                            <Lock className="w-3.5 h-3.5" />
+                            <span>Preview Mode (Starter)</span>
+                        </div>
+                    )}
                 </div>
+
+                {/* Upgrade Banner if Locked */}
+                {isLocked && user && (
+                    <div className="mt-6 p-4 rounded-xl bg-gradient-to-r from-accent/20 to-transparent border border-accent/20 flex flex-col md:flex-row items-center md:justify-between gap-4">
+                        <div className="flex items-center gap-3">
+                            <div className="p-2 bg-accent text-white rounded-lg">
+                                <Crown className="w-5 h-5" />
+                            </div>
+                            <div>
+                                <h3 className="font-bold text-white text-sm">Upgrade ke Hero untuk Akses Penuh</h3>
+                                <p className="text-xs text-text-muted">Dapatkan akses instant ke {totalFiles} template & dokumen.</p>
+                            </div>
+                        </div>
+                        <Link href="/course/upgrade" className="w-full md:w-auto px-4 py-2 bg-accent hover:bg-accent-light text-white text-sm font-bold rounded-lg transition-colors text-center shadow-lg shadow-accent/20">
+                            Upgrade Sekarang
+                        </Link>
+                    </div>
+                )}
 
                 {/* Search */}
                 <div className="relative mt-6 max-w-md">
@@ -341,7 +400,7 @@ export default function BonusPage() {
                             {searchResults.map((file, i) => (
                                 <div key={i}>
                                     <p className="text-xs text-text-muted mb-1 ml-1">{file.folderName}</p>
-                                    <FileRow file={file} />
+                                    <FileRow file={file} isLocked={isLocked} />
                                 </div>
                             ))}
                         </div>
@@ -357,6 +416,7 @@ export default function BonusPage() {
                     <div className="grid sm:grid-cols-2 gap-4">
                         {bonusFolders.map((folder) => {
                             const Icon = folder.icon;
+                            // ... file count calc ...
                             const fileCount =
                                 folder.files.length +
                                 (folder.subfolders?.reduce((a, sf) => a + sf.files.length, 0) || 0);
@@ -384,7 +444,11 @@ export default function BonusPage() {
                                                 )}
                                             </div>
                                         </div>
-                                        <ChevronRight className="w-5 h-5 text-text-muted group-hover:text-accent shrink-0 mt-1 transition-colors" />
+                                        {isLocked ? (
+                                            <Lock className="w-5 h-5 text-text-muted group-hover:text-text transition-colors shrink-0 mt-1" />
+                                        ) : (
+                                            <ChevronRight className="w-5 h-5 text-text-muted group-hover:text-accent shrink-0 mt-1 transition-colors" />
+                                        )}
                                     </div>
                                 </button>
                             );
@@ -406,7 +470,7 @@ export default function BonusPage() {
                             <div className="h-8 w-px bg-border hidden md:block" />
                             <div>
                                 <p className="text-2xl font-black text-accent">Gratis</p>
-                                <p className="text-xs text-text-muted mt-0.5">Untuk Member</p>
+                                <p className="text-xs text-text-muted mt-0.5">Untuk Member Hero</p>
                             </div>
                         </div>
                     </div>
@@ -438,7 +502,7 @@ export default function BonusPage() {
                     {activeData.files.length > 0 && (
                         <div className="space-y-2 mb-6">
                             {activeData.files.map((file, i) => (
-                                <FileRow key={i} file={file} />
+                                <FileRow key={i} file={file} isLocked={isLocked} />
                             ))}
                         </div>
                     )}
@@ -452,6 +516,7 @@ export default function BonusPage() {
                                 <button
                                     onClick={() => toggleSubfolder(sfKey)}
                                     className="flex items-center gap-3 p-4 bg-surface-card border border-border rounded-xl w-full text-left hover:border-accent/30 transition-all cursor-pointer"
+                                    disabled={isLocked && false} // Subfolders can still be opened to see list, just files locked
                                 >
                                     {isExpanded ? (
                                         <FolderOpen className="w-5 h-5 text-accent shrink-0" />
@@ -460,14 +525,18 @@ export default function BonusPage() {
                                     )}
                                     <span className="font-semibold text-text text-sm flex-1">{sf.name}</span>
                                     <span className="text-text-muted text-xs">{sf.files.length} file</span>
-                                    <ChevronRight
-                                        className={`w-4 h-4 text-text-muted transition-transform duration-200 ${isExpanded ? "rotate-90" : ""}`}
-                                    />
+                                    {isLocked ? (
+                                        <Lock className="w-4 h-4 text-text-muted" />
+                                    ) : (
+                                        <ChevronRight
+                                            className={`w-4 h-4 text-text-muted transition-transform duration-200 ${isExpanded ? "rotate-90" : ""}`}
+                                        />
+                                    )}
                                 </button>
                                 {isExpanded && (
                                     <div className="mt-2 ml-4 space-y-2 border-l-2 border-border pl-4">
                                         {sf.files.map((file, fi) => (
-                                            <FileRow key={fi} file={file} />
+                                            <FileRow key={fi} file={file} isLocked={isLocked} />
                                         ))}
                                     </div>
                                 )}
