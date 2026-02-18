@@ -3,7 +3,6 @@ import { v } from "convex/values";
 
 /**
  * Public query: Validate session token and return user profile.
- * Used by AuthGuard and login page to check authentication status.
  */
 export const getMe = query({
     args: { sessionToken: v.optional(v.string()) },
