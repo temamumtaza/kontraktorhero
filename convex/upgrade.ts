@@ -11,7 +11,7 @@ export const initiateUpgrade = action({
         userId: v.id("users"),
         origin: v.optional(v.string()),
     },
-    handler: async (ctx, args) => {
+    handler: async (ctx, args): Promise<{ token: string; redirect_url: string }> => {
         // 1. Get user
         const user = await ctx.runQuery(internal.users.getUserById, { userId: args.userId });
         if (!user) throw new Error("User tidak ditemukan.");
