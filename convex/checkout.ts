@@ -1,7 +1,8 @@
 import { internalQuery, internalMutation } from "./_generated/server";
 import { v } from "convex/values";
 
-// Query pending registration by email
+// ===== Pending Registration functions =====
+
 export const getPendingByEmail = internalQuery({
     args: { email: v.string() },
     handler: async (ctx, args) => {
@@ -12,7 +13,6 @@ export const getPendingByEmail = internalQuery({
     },
 });
 
-// Query pending registration by orderId
 export const getPendingByOrderId = internalQuery({
     args: { orderId: v.string() },
     handler: async (ctx, args) => {
@@ -23,7 +23,6 @@ export const getPendingByOrderId = internalQuery({
     },
 });
 
-// Save new pending registration
 export const savePendingRegistration = internalMutation({
     args: {
         email: v.string(),
@@ -44,7 +43,6 @@ export const savePendingRegistration = internalMutation({
     },
 });
 
-// Mark pending registration as paid
 export const markPaid = internalMutation({
     args: { orderId: v.string() },
     handler: async (ctx, args) => {
@@ -59,7 +57,6 @@ export const markPaid = internalMutation({
     },
 });
 
-// Delete pending registration
 export const deletePending = internalMutation({
     args: { id: v.id("pendingRegistrations") },
     handler: async (ctx, args) => {
@@ -67,7 +64,8 @@ export const deletePending = internalMutation({
     },
 });
 
-// Create the actual user account after payment is confirmed
+// ===== Create user after payment =====
+
 export const createPaidUser = internalMutation({
     args: { orderId: v.string() },
     handler: async (ctx, args) => {
@@ -81,14 +79,13 @@ export const createPaidUser = internalMutation({
             return null;
         }
 
-        // Check if user with this email already exists
+        // Check if user already exists
         const existingUser = await ctx.db
             .query("users")
             .withIndex("email", (q) => q.eq("email", pending.email))
             .first();
 
         if (existingUser) {
-            // User already exists — just activate subscription
             await ctx.db.patch(existingUser._id, {
                 subscriptionStatus: "active",
                 tier: pending.tier,
@@ -98,10 +95,11 @@ export const createPaidUser = internalMutation({
             return existingUser._id;
         }
 
-        // Create new user directly
+        // Create user with password hash stored directly
         const userId = await ctx.db.insert("users", {
             email: pending.email,
             name: `${pending.firstName} ${pending.lastName}`.trim(),
+            passwordHash: pending.passwordHash,
             firstName: pending.firstName,
             lastName: pending.lastName,
             phone: pending.phone,
@@ -111,15 +109,6 @@ export const createPaidUser = internalMutation({
             lastTransactionId: pending.orderId,
         });
 
-        // Create auth account so user can login via Convex Auth
-        await ctx.db.insert("authAccounts", {
-            userId,
-            provider: "password",
-            providerAccountId: pending.email,
-            secret: pending.passwordHash,
-        });
-
-        // Mark pending as completed
         await ctx.db.patch(pending._id, { status: "paid" });
 
         console.log(`Created paid user ${userId} for order ${args.orderId}`);
@@ -129,18 +118,13 @@ export const createPaidUser = internalMutation({
 
 // ===== Login support functions =====
 
-// Get auth account by email (providerAccountId)
-export const getAuthAccountByEmail = internalQuery({
+// Get user by email (for login verification)
+export const getUserByEmail = internalQuery({
     args: { email: v.string() },
     handler: async (ctx, args) => {
         return await ctx.db
-            .query("authAccounts")
-            .filter((q) =>
-                q.and(
-                    q.eq(q.field("provider"), "password"),
-                    q.eq(q.field("providerAccountId"), args.email)
-                )
-            )
+            .query("users")
+            .withIndex("email", (q) => q.eq("email", args.email))
             .first();
     },
 });
@@ -153,18 +137,16 @@ export const getUserById = internalQuery({
     },
 });
 
-// Create a session for the user
+// Create a session
 export const createSession = internalMutation({
     args: { userId: v.id("users") },
     handler: async (ctx, args) => {
-        // Generate random token
         const array = new Uint8Array(32);
         crypto.getRandomValues(array);
         const token = Array.from(array)
             .map((b) => b.toString(16).padStart(2, "0"))
             .join("");
 
-        // 30-day expiry
         const expiresAt = Date.now() + 30 * 24 * 60 * 60 * 1000;
 
         await ctx.db.insert("sessions", {
@@ -190,7 +172,6 @@ export const validateSession = internalQuery({
             return null;
         }
 
-        const user = await ctx.db.get(session.userId);
-        return user;
+        return await ctx.db.get(session.userId);
     },
 });

@@ -8,7 +8,6 @@
  * @module
  */
 
-import type * as auth from "../auth.js";
 import type * as checkout from "../checkout.js";
 import type * as checkoutActions from "../checkoutActions.js";
 import type * as http from "../http.js";
@@ -22,7 +21,6 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
-  auth: typeof auth;
   checkout: typeof checkout;
   checkoutActions: typeof checkoutActions;
   http: typeof http;

@@ -9,8 +9,6 @@
     "lint": "eslint"
   },
   "dependencies": {
-    "@auth/core": "^0.37.0",
-    "@convex-dev/auth": "^0.0.90",
     "@hookform/resolvers": "^5.2.2",
     "@types/bcryptjs": "^2.4.6",
     "@types/react-syntax-highlighter": "^15.5.13",
