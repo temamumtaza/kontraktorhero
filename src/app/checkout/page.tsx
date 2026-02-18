@@ -5,7 +5,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { useAction, useQuery } from "convex/react";
+import { useAction, useQuery, useConvex } from "convex/react";
 import { api } from "@convex/_generated/api";
 import Image from "next/image";
 import { Loader2, CheckCircle2, Tag, X } from "lucide-react";
@@ -94,11 +94,29 @@ function CheckoutContent() {
     const {
         register,
         handleSubmit,
+        setError: setFormError,
+        clearErrors,
         formState: { errors },
     } = useForm<FormData>({
         resolver: zodResolver(formSchema),
         defaultValues: {},
     });
+
+    // ===== Validation =====
+    const convex = useConvex(); // Need useConvex from convex/react
+
+    const checkAvailability = async (field: "email" | "username", value: string) => {
+        if (!value) return;
+        const isAvailable = await convex.query(api.users.checkAvailability, { field, value });
+        if (!isAvailable) {
+            setFormError(field, {
+                type: "manual",
+                message: `${field === "email" ? "Email" : "Username"} sudah digunakan.`
+            });
+        } else {
+            clearErrors(field);
+        }
+    };
 
     // If payment already completed (from Midtrans redirect callback)
     const urlStatus = searchParams.get("status");
@@ -420,7 +438,9 @@ function CheckoutContent() {
                         <div className="space-y-2">
                             <label className="text-sm font-medium text-text">Email</label>
                             <input
-                                {...register("email")}
+                                {...register("email", {
+                                    onBlur: (e) => checkAvailability("email", e.target.value),
+                                })}
                                 type="email"
                                 className="w-full bg-surface-input border border-border rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-accent/50 focus:border-accent"
                                 placeholder="nama@email.com"
@@ -432,7 +452,9 @@ function CheckoutContent() {
                         <div className="space-y-2">
                             <label className="text-sm font-medium text-text">Username</label>
                             <input
-                                {...register("username")}
+                                {...register("username", {
+                                    onBlur: (e) => checkAvailability("username", e.target.value),
+                                })}
                                 className="w-full bg-surface-input border border-border rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-accent/50 focus:border-accent"
                                 placeholder="kontraktor_sukses"
                             />
