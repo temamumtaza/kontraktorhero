@@ -271,7 +271,7 @@ function CheckoutContent() {
                                                     Rp {p.originalPrice.toLocaleString("id-ID")}
                                                 </span>
                                             </div>
-                                            <span className="text-lg font-bold text-accent">
+                                            <span className="text-lg font-bold text-accent whitespace-nowrap flex-shrink-0">
                                                 Rp {p.price.toLocaleString("id-ID")}
                                             </span>
                                         </div>
