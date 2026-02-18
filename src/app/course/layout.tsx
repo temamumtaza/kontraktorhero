@@ -8,6 +8,7 @@ import AuthGuard from "@/components/AuthGuard";
 import { useQuery } from "convex/react";
 import { api } from "@convex/_generated/api";
 import { clearSessionToken, getSessionToken } from "@/app/login/page";
+import { chapters } from "@/lib/chapters";
 import {
     Brain,
     Building2,
@@ -29,14 +30,7 @@ import {
 } from "lucide-react";
 
 // Navigation Config
-const chapterNav = [
-    { slug: "bab-1", num: "01", title: "Fondasi & Mindset Bisnis", Icon: Brain },
-    { slug: "bab-2", num: "02", title: "Membangun Otoritas & Kepercayaan", Icon: Building2 },
-    { slug: "bab-3", num: "03", title: "Manajemen Keuangan", Icon: Wallet },
-    { slug: "bab-4", num: "04", title: "Pertahanan Arus Kas", Icon: ShieldCheck },
-    { slug: "bab-5", num: "05", title: "Sistem Operasional & Tim", Icon: Settings },
-    { slug: "bab-6", num: "06", title: "Skalabilitas Developer", Icon: Rocket },
-];
+
 
 export default function CourseLayout({
     children,
