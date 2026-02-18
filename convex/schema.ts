@@ -14,7 +14,7 @@ const schema = defineSchema({
         tier: v.optional(v.string()),
         subscriptionStatus: v.optional(v.string()),
         lastTransactionId: v.optional(v.string()),
-    }).index("email", ["email"]),
+    }).index("email", ["email"]).index("username", ["username"]),
 
     sessions: defineTable({
         userId: v.id("users"),

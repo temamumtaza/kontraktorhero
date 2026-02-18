@@ -35,3 +35,29 @@ export const updateUserTierInternal = internalMutation({
         await ctx.db.patch(args.userId, { tier: args.tier });
     },
 });
+
+export const checkAvailability = query({
+    args: { field: v.string(), value: v.string() },
+    handler: async (ctx, args) => {
+        const { field, value } = args;
+        if (!value) return true; // Empty is "available" until filled? Or false? Let's say true (skip check)
+
+        if (field === "email") {
+            const user = await ctx.db
+                .query("users")
+                .withIndex("email", (q) => q.eq("email", value))
+                .first();
+            return !user;
+        }
+
+        if (field === "username") {
+            const user = await ctx.db
+                .query("users")
+                .withIndex("username", (q) => q.eq("username", value))
+                .first();
+            return !user;
+        }
+
+        return true;
+    },
+});
